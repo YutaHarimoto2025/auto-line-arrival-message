@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_version,feed_contact_email,feed_contact_url
+首都圏新都市鉄道,https://www.mir.co.jp/,ja,20250315,20260313,20251217,,
