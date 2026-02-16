@@ -6,21 +6,22 @@ import os
 import pandas as pd
 import dotenv
 
-def translate_to_en(jp_name: str) -> str|None:
+def translate_to_en(jp_name: str) -> str:
     df = pd.read_csv('TX_GTFS/translations.txt')
     jp_to_en_dict = df[df['language'] == 'en'].set_index('field_value')['translation'].to_dict()
-    return jp_to_en_dict.get(jp_name, None)
+    return jp_to_en_dict[jp_name]
 
-def get_stop_id(jp_name: str) -> str|None:
+def get_stop_id(jp_name: str) -> str:
     df = pd.read_csv('TX_GTFS/stops.txt')
     stop_id_dict = df.set_index('stop_name')['stop_id'].to_dict()
-    return stop_id_dict.get(jp_name, None)
+    return stop_id_dict[jp_name]
     
-def get_arrival_time(df_st, ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:str, DIRECTION:str) -> tuple[str, str]|None:
+def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:str, DIRECTION:str) -> tuple[str, str]|None:
     """
     1. 駅Cの時刻表から最も近い列車を特定
     2. その列車の時刻表から駅Dの到着時刻を直接取得
     """
+    df_st: pd.DataFrame= pd.read_csv('TX_GTFS/stop_times.txt')
     # 今日の曜日判定 (0:月曜 ... 5:土曜, 6:日曜)
     weekday = datetime.datetime.now().weekday()
     now = datetime.datetime.now()
@@ -55,7 +56,7 @@ def get_arrival_time(df_st, ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D
     #     print("=================================================================")
 
     target_train_id = None
-    dep_time_str_nearest = None
+    dep_time_str_nearest = ""
     min_diff = float('inf')
 
     target_station_d_id = "odpt.Station:MIR.TsukubaExpress." + translate_to_en(STATION_D_NAME)
@@ -66,7 +67,7 @@ def get_arrival_time(df_st, ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D
             obj:dict
             
             #dep_time_strをdatetimeオブジェクトに変換
-            dep_time_str:str = obj.get('odpt:departureTime') # "12:30" や "24:15" など
+            dep_time_str:str = obj['odpt:departureTime'] # "12:30" や "24:15" など
             if not dep_time_str: continue
             try:
                 hour, minute = map(int, dep_time_str.split(':'))
