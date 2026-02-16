@@ -121,7 +121,7 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
     # 5. 出発時刻がいずれかに一致する&stop_idが一致するtrip_idを特定
     # departure_timeは秒まで含まれる（24:07:00など）可能性があるため、startswithで判定
     matched_trips = df_filtered[
-        (df_filtered['departure_time'].apply(lambda x: any(x.startswith(t) for t in target_times))) & 
+        (df_filtered['departure_time'].apply(lambda x: any(str(x).startswith(t) for t in target_times))) &
         (df_filtered['stop_id'] == int(get_stop_id(STATION_C_NAME))) 
     ]['trip_id'].unique()
 
