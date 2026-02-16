@@ -6,12 +6,6 @@ import os
 import pandas as pd
 import dotenv
 
-dotenv.load_dotenv()
-ODPT_ACCESS_TOKEN = os.getenv("ODPT_ACCESS_TOKEN")
-STATION_C_NAME = os.getenv("STATION_C_NAME")
-STATION_D_NAME = os.getenv("STATION_D_NAME")
-DIRECTION = os.getenv("DIRECTION")
-
 def translate_to_en(jp_name: str) -> str|None:
     df = pd.read_csv('TX_GTFS/translations.txt')
     jp_to_en_dict = df[df['language'] == 'en'].set_index('field_value')['translation'].to_dict()
@@ -23,6 +17,11 @@ def get_stop_id(jp_name: str) -> str|None:
     return stop_id_dict.get(jp_name, None)
     
 def get_arrival_time(df_st):
+    dotenv.load_dotenv()
+    ODPT_ACCESS_TOKEN = os.getenv("ODPT_ACCESS_TOKEN")
+    STATION_C_NAME = os.getenv("STATION_C_NAME")
+    STATION_D_NAME = os.getenv("STATION_D_NAME")
+    DIRECTION = os.getenv("DIRECTION")
     """
     1. 駅Cの時刻表から最も近い列車を特定
     2. その列車の時刻表から駅Dの到着時刻を直接取得
