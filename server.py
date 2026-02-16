@@ -13,13 +13,13 @@ app = Flask(__name__)
 DATA_FILE = "tracking_data.json"
 df_st: pd.DataFrame= pd.read_csv('TX_GTFS/stop_times.txt') #重いので一度だけ読み込む
 dotenv.load_dotenv()
-ODPT_ACCESS_TOKEN = os.getenv("ODPT_ACCESS_TOKEN")
-STATION_C_NAME = os.getenv("STATION_C_NAME")
-STATION_D_NAME = os.getenv("STATION_D_NAME")
-DIRECTION = os.getenv("DIRECTION")
+ODPT_ACCESS_TOKEN = os.environ.get("ODPT_ACCESS_TOKEN")
+STATION_C_NAME = os.environ.get("STATION_C_NAME")
+STATION_D_NAME = os.environ.get("STATION_D_NAME")
+DIRECTION = os.environ.get("DIRECTION")
 
-LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN")  
-LINE_USER_ID = os.getenv("LINE_USER_ID")
+LINE_ACCESS_TOKEN = os.environ.get("LINE_ACCESS_TOKEN")  
+LINE_USER_ID = os.environ.get("LINE_USER_ID")
 
 def save_data(data):
     """データをJSONファイルに保存するヘルパー関数"""
@@ -101,7 +101,7 @@ def station_c():
             return f"Success: {msg}", 200
         else:
             return "Too slow (B-C)", 200
-    
+    print("駅C通過：Bの記録がありません")
     return "B time not found or A-B check failed", 400
 
 @app.route('/callback', methods=['GET', 'POST'])
