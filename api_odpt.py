@@ -16,12 +16,7 @@ def get_stop_id(jp_name: str) -> str|None:
     stop_id_dict = df.set_index('stop_name')['stop_id'].to_dict()
     return stop_id_dict.get(jp_name, None)
     
-def get_arrival_time(df_st):
-    dotenv.load_dotenv()
-    ODPT_ACCESS_TOKEN = os.getenv("ODPT_ACCESS_TOKEN")
-    STATION_C_NAME = os.getenv("STATION_C_NAME")
-    STATION_D_NAME = os.getenv("STATION_D_NAME")
-    DIRECTION = os.getenv("DIRECTION")
+def get_arrival_time(df_st, ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:str, DIRECTION:str) -> tuple[str, str]|None:
     """
     1. 駅Cの時刻表から最も近い列車を特定
     2. その列車の時刻表から駅Dの到着時刻を直接取得
@@ -140,4 +135,4 @@ def get_arrival_time(df_st):
     return result_row.iloc[0]['arrival_time'], STATION_D_NAME
 
 if __name__ == "__main__":
-    arrival_time = get_arrival_time()
+    # arrival_time = get_arrival_time()

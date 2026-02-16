@@ -5,11 +5,21 @@ from api_odpt import get_arrival_time
 import pandas as pd
 import json
 import os
+import dotenv
 
 app = Flask(__name__)
 
 # JSONファイルのパス
 DATA_FILE = "tracking_data.json"
+df_st: pd.DataFrame= pd.read_csv('TX_GTFS/stop_times.txt') #重いので一度だけ読み込む
+dotenv.load_dotenv()
+ODPT_ACCESS_TOKEN = os.getenv("ODPT_ACCESS_TOKEN")
+STATION_C_NAME = os.getenv("STATION_C_NAME")
+STATION_D_NAME = os.getenv("STATION_D_NAME")
+DIRECTION = os.getenv("DIRECTION")
+
+LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN")  
+LINE_USER_ID = os.getenv("LINE_USER_ID")
 
 def save_data(data):
     """データをJSONファイルに保存するヘルパー関数"""
@@ -34,8 +44,6 @@ def load_data():
         "station_a_time": datetime.datetime.fromisoformat(raw_data["station_a_time"]) if raw_data["station_a_time"] else None,
         "station_b_time": datetime.datetime.fromisoformat(raw_data["station_b_time"]) if raw_data["station_b_time"] else None
     }
-
-df_st = pd.read_csv('TX_GTFS/stop_times.txt') #重いので一度だけ読み込む
 
 @app.route('/station_a', methods=['GET', 'POST'])
 def station_a():
@@ -81,9 +89,9 @@ def station_c():
         print(f"B-C間移動時間: {duration:.1f}分")
         
         if duration <= 5:
-            arrival_time_str, arrival_station_str = get_arrival_time(df_st)     
+            arrival_time_str, arrival_station_str = get_arrival_time(df_st, ODPT_ACCESS_TOKEN, STATION_C_NAME, STATION_D_NAME, DIRECTION) 
             msg = f"{person}は{arrival_station_str}駅に {arrival_time_str} 頃に到着予定です。"
-            send_line_meg(msg)
+            send_line_meg(msg, LINE_ACCESS_TOKEN, LINE_USER_ID)
             
             # リセットして保存
             tracking_data["station_a_time"] = None
