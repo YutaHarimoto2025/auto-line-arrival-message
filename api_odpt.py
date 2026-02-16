@@ -1,10 +1,11 @@
 import requests
-import datetime
 import jpholiday
 import json
 import os
 import pandas as pd
 import dotenv
+from datetime import datetime, timezone, timedelta
+JST = timezone(timedelta(hours=+9))
 
 def translate_to_en(jp_name: str) -> str:
     df = pd.read_csv('TX_GTFS/translations.txt')
@@ -23,8 +24,8 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
     """
     df_st: pd.DataFrame= pd.read_csv('TX_GTFS/stop_times.txt')
     # 今日の曜日判定 (0:月曜 ... 5:土曜, 6:日曜)
-    weekday = datetime.datetime.now().weekday()
-    now = datetime.datetime.now()
+    now = datetime.now(JST)  # 修正後
+    weekday = now.weekday()
     print(f"{now=}")
     if weekday >= 5 or jpholiday.is_holiday(now):
         daytype = "SaturdayHoliday"
@@ -77,15 +78,15 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
             train_dt = now.replace(hour=0, minute=0, second=0, microsecond=0)
             if hour >= 24:
                 # 24:15 → 翌日の00:15として扱う
-                train_dt = train_dt + datetime.timedelta(days=1, hours=hour-24, minutes=minute)
+                train_dt = train_dt + timedelta(days=1, hours=hour-24, minutes=minute)
             else:
                 train_dt = train_dt.replace(hour=hour, minute=minute)
                 
             # 日付をまたぐ判定ミスを防ぐため、前後1日を候補に入れる
             candidates = [
                 train_dt,
-                train_dt - datetime.timedelta(days=1), # 昨日
-                train_dt + datetime.timedelta(days=1)  # 明日
+                train_dt - timedelta(days=1), # 昨日
+                train_dt + timedelta(days=1)  # 明日
             ]
 
             # 未来の電車の中で、一番近いものを探す (現在時刻より前の電車は無視)

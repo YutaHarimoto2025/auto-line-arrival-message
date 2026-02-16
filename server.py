@@ -1,5 +1,4 @@
 from flask import Flask, request
-import datetime
 from api_line import send_line_meg 
 from api_odpt import get_arrival_time
 import pandas as pd
@@ -8,6 +7,9 @@ import os
 import dotenv
 import psycopg2
 from psycopg2.extras import DictCursor
+from datetime import datetime, timedelta, timezone
+JST = timezone(timedelta(hours=+9))
+
 app = Flask(__name__)
 
 # JSONファイルのパス
@@ -25,7 +27,7 @@ LINE_USER_ID = os.environ.get("LINE_USER_ID")
 
 DB_URL = os.environ.get("DB_URL")
 
-def load_data(person: str) -> dict[str, datetime.datetime|None]:
+def load_data(person: str) -> dict[str, datetime|None]:
     """指定された個人のデータをDBから読み込む。存在しない場合は初期値nullを返す。"""
     conn = psycopg2.connect(DB_URL)
     cur = conn.cursor(cursor_factory=DictCursor)
@@ -46,7 +48,7 @@ def load_data(person: str) -> dict[str, datetime.datetime|None]:
         cur.close()
         conn.close()
 
-def save_data(person:str, data:dict[str, datetime.datetime|None]) -> None:
+def save_data(person:str, data:dict[str, datetime|None]) -> None:
     """UPSERT（挿入または更新）を使用して個人のデータを保存する。"""
     conn = psycopg2.connect(DB_URL)
     cur = conn.cursor()
@@ -78,7 +80,7 @@ def save_data(person:str, data:dict[str, datetime.datetime|None]) -> None:
 def station_a():
     person = request.args.get("person", ANYONE)
     tracking_data = load_data(person)
-    tracking_data["station_a_time"] = datetime.datetime.now()
+    tracking_data["station_a_time"] = datetime.now(JST)
     tracking_data["station_b_time"] = None
     save_data(person, tracking_data)
     
@@ -89,7 +91,7 @@ def station_a():
 def station_b():
     person = request.args.get("person", ANYONE)
     tracking_data = load_data(person)
-    now = datetime.datetime.now()
+    now = datetime.now(JST)
     a_time = tracking_data.get("station_a_time")
     
     if a_time and (now - a_time).total_seconds() / 60 <= 30: #!
@@ -107,7 +109,7 @@ def station_b():
 def station_c():
     person = request.args.get("person", ANYONE)
     tracking_data = load_data(person)
-    now = datetime.datetime.now()
+    now = datetime.now(JST)
     b_time = tracking_data.get("station_b_time")
     
     if b_time:
