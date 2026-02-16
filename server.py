@@ -11,7 +11,6 @@ app = Flask(__name__)
 
 # JSONファイルのパス
 DATA_FILE = "tracking_data.json"
-df_st: pd.DataFrame= pd.read_csv('TX_GTFS/stop_times.txt') #重いので一度だけ読み込む
 dotenv.load_dotenv()
 ODPT_ACCESS_TOKEN = os.environ.get("ODPT_ACCESS_TOKEN")
 STATION_C_NAME = os.environ.get("STATION_C_NAME")
@@ -75,6 +74,7 @@ def station_b():
 
 @app.route('/station_c', methods=['GET', 'POST'])
 def station_c():
+    df_st: pd.DataFrame= pd.read_csv('TX_GTFS/stop_times.txt') #重いので一度だけ読み込む
     now = datetime.datetime.now()
     tracking_data = load_data() # ファイルから読み込み
     b_time = tracking_data.get("station_b_time")
