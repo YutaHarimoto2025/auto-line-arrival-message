@@ -71,13 +71,18 @@ def station_c():
     tracking_data = load_data() # ファイルから読み込み
     b_time = tracking_data.get("station_b_time")
     
+    if request.method == 'POST' and request.is_json:
+        person = request.json.get("person", "誰かさん")
+    else:
+        person = request.args.get("person", "誰かさん")
+    
     if b_time:
         duration = (now - b_time).total_seconds() / 60
         print(f"B-C間移動時間: {duration:.1f}分")
         
         if duration <= 5:
             arrival_time_str, arrival_station_str = get_arrival_time(df_st)     
-            msg = f"{arrival_station_str}駅には {arrival_time_str} 頃に到着予定です。"
+            msg = f"{person}は{arrival_station_str}駅に {arrival_time_str} 頃に到着予定です。"
             send_line_meg(msg)
             
             # リセットして保存
