@@ -134,5 +134,5 @@ def get_arrival_time(df_st, ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D
     print(result_row.iloc[0]['arrival_time'])
     return result_row.iloc[0]['arrival_time'], STATION_D_NAME
 
-if __name__ == "__main__":
-    # arrival_time = get_arrival_time()
+# if __name__ == "__main__":
+#     arrival_time = get_arrival_time()
