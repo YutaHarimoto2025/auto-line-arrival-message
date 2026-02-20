@@ -17,7 +17,7 @@ def get_stop_id(jp_name: str) -> str:
     stop_id_dict = df.set_index('stop_name')['stop_id'].to_dict()
     return stop_id_dict[jp_name]
     
-def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:str, DIRECTION:str) -> tuple[str, str]|None:
+def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:str, DIRECTION:str) -> tuple[str, str]:
     """
     1. 駅Cの時刻表から最も近い列車を特定
     2. その列車の時刻表から駅Dの到着時刻を直接取得
@@ -46,8 +46,7 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
     try:
         res = requests.get(Timetable_url, params).json()
     except Exception as e:
-        print(f"Connection Error: {e}")
-        return None
+        raise RuntimeError(f"ODPT APIへのリクエストに失敗しました: {e}")
     res: list[dict]
 
     # for idx in range(len(res)):
@@ -103,8 +102,7 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
                     target_train_id = obj.get('odpt:train')
 
     if not target_train_id:
-        print("エラー: 駅Cの時刻表から周辺時間の列車が特定できませんでした")
-        return None
+        raise RuntimeError("近い時間の列車が見つかりませんでした。APIのレスポンスや時刻表データを確認してください。")
 
     print(f"特定した列車ID: {target_train_id}")
     print(f"{STATION_C_NAME}出発時刻：{dep_time_str_nearest}")
@@ -126,8 +124,8 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
     ]['trip_id'].unique()
 
     if len(matched_trips) == 0:
-        print(f"時刻表から一致する運行が見つかりませんでした (検索時刻: {target_times})")
-        return None
+        raise RuntimeError(f"条件に一致する列車が見つかりませんでした。APIのレスポンスや時刻表データを確認してください。{target_times=}")
+    
     elif len(matched_trips) > 1:
         print(f"警告: 複数の運行が一致しました。最初の1件を使用します。 {matched_trips}")
     
