@@ -4,11 +4,13 @@ import json
 import os
 import pandas as pd
 import dotenv
+import zipfile
+import shutil
 from datetime import datetime, timezone, timedelta
 JST = timezone(timedelta(hours=+9))
 
 def translate_to_en(jp_name: str) -> str:
-    df = pd.read_csv('TX_GTFS/translations.txt')
+    df = pd.read_csv('TX_GTFS_archive/translations.txt') #translations.txtは古くならず固定する運用
     jp_to_en_dict = df[df['language'] == 'en'].set_index('field_value')['translation'].to_dict()
     return jp_to_en_dict[jp_name]
 
@@ -133,6 +135,53 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
     result_row = df_st[(df_st['trip_id'] == final_trip_id) & (df_st['stop_id'] == int(get_stop_id(STATION_D_NAME)))]
     print(result_row.iloc[0]['arrival_time'])
     return result_row.iloc[0]['arrival_time'], STATION_D_NAME
+
+def update_TX_GTFS(ODPT_ACCESS_TOKEN:str, save_dir: str = "./TX_GTFS"):
+    #save_dir/calendar.txtを読み込んで、end_dateの列（20260313とか）で一番過去の値を求める．
+    try:
+        calendar_df = pd.read_csv(os.path.join(save_dir, "calendar.txt"))
+        calendar_df['end_date'] = pd.to_datetime(calendar_df['end_date'], format='%Y%m%d')
+        earliest_end_date = calendar_df['end_date'].min()
+        print(f"カレンダーの最も古いend_date: {earliest_end_date}")
+        # 今日の日付が最も古いend_date-24hを過ぎている場合は、GTFSデータが古い可能性があるので今のを削除してダウンロード
+        if pd.Timestamp.now() > earliest_end_date - pd.Timedelta(days=1):
+            print("GTFSデータが古くなるので更新します。")
+        else:
+            print("GTFSデータは最新のようです。ダウンロードをスキップします。")
+            return
+    except FileNotFoundError:
+        print("calendar.txtが見つかりません。GTFSデータを更新します.")
+    
+    shutil.rmtree(save_dir, ignore_errors=True)
+    os.makedirs(save_dir)
+    
+    # 保存するファイル名
+    file_path = os.path.join(save_dir, "MIR-Train-GTFS.zip")
+
+    # API設定
+    station_url = "https://api.odpt.org/api/v4/files/MIR/data/MIR-Train-GTFS.zip"
+    params = {
+        "acl:consumerKey": ODPT_ACCESS_TOKEN
+    }
+
+    try:
+        # stream=Trueにすることでメモリ効率を良くする
+        with requests.get(station_url, params=params, stream=True) as res:
+            res.raise_for_status() # エラーがあれば例外を出す
+            
+            with open(file_path, 'wb') as f:
+                for chunk in res.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        
+        print(f"ダウンロード完了: {file_path}")
+        
+        #zip解凍
+        with zipfile.ZipFile(file_path, 'r') as zip_ref:
+            zip_ref.extractall(save_dir)
+        print(f"解凍完了: {save_dir}")
+        
+    except requests.exceptions.RequestException as e:
+        print(f"ダウンロードに失敗しました: {e}")
 
 # if __name__ == "__main__":
 #     arrival_time = get_arrival_time()
