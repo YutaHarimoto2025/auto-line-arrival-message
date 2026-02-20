@@ -90,9 +90,9 @@ def get_arrival_time(ODPT_ACCESS_TOKEN:str, STATION_C_NAME:str, STATION_D_NAME:s
                 train_dt + timedelta(days=1)  # 明日
             ]
 
-            # 未来の電車の中で、一番近いものを探す (現在時刻より前の電車は無視)
-            # if train_dt < now:
-            #     continue
+            # 過去の電車の中で、一番近いものを探す (現在時刻より後の電車は無視)
+            if train_dt > now:
+                continue
 
             for cand in candidates:
                 # 「今(now)」に最も近い時刻を探す

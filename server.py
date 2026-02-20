@@ -94,7 +94,7 @@ def station_b():
     now = datetime.now(JST)
     a_time = tracking_data.get("station_a_time")
     
-    if a_time and (now - a_time).total_seconds() / 60 <= 30: #!
+    if a_time and (now - a_time).total_seconds() / 60 <= 20: #!
         tracking_data["station_b_time"] = now
         save_data(person, tracking_data)
         print(f"駅B通過を記録: {now} (A-B間は30分以内でした)")
@@ -116,7 +116,7 @@ def station_c():
         duration = (now - b_time).total_seconds() / 60
         print(f"B-C間移動時間: {duration:.1f}分")
         
-        if duration <= 5: #!
+        if duration <= 30: #!
             arrival_time_str, arrival_station_str = get_arrival_time(ODPT_ACCESS_TOKEN, STATION_C_NAME, STATION_D_NAME, DIRECTION) 
             msg = f"{person}は{arrival_station_str}駅に {arrival_time_str} 頃に到着予定です。"
             send_line_meg(msg, LINE_ACCESS_TOKEN, LINE_USER_ID)
